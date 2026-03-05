@@ -1,0 +1,43 @@
+{% extends 'layout.html' %}
+
+{% block title %}ועדות | מאגר הכנסת{% endblock %}
+
+{% block page_title %}ועדות הכנסת{% endblock %}
+
+{% block page_actions %}
+<div class="badge">
+    <i class="fas fa-users-gear" style="margin-left: 0.5rem;"></i> {{ committees|length }} ועדות
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="data-grid fade-in" style="animation-delay: 0.2s;">
+    {% for cmd in committees %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title" style="margin: 0;">{{ cmd.commitie_name }}</h3>
+        </div>
+        <div class="card-body">
+            <p
+                style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                {{ cmd.description if cmd.description else 'אין תיאור זמין לוועדה זו.' }}
+            </p>
+        </div>
+        <div class="card-footer">
+            <a href="{{ url_for('committee_details', committee_id=cmd.commitieID) }}" class="btn btn-outline"
+                style="width: 100%; justify-content: center;">
+                צפה בחברי הועדה <i class="fas fa-arrow-left" style="margin-right: 0.5rem; margin-left: 0;"></i>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not committees %}
+<div class="card" style="text-align: center; padding: 3rem;">
+    <i class="fas fa-exclamation-circle"
+        style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 1rem;"></i>
+    <h3>לא נמצאו ועדות</h3>
+</div>
+{% endif %}
+{% endblock %}

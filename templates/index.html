@@ -1,0 +1,72 @@
+{% extends 'layout.html' %}
+
+{% block title %}דף הבית | מאגר הכנסת{% endblock %}
+
+{% block page_title %}ראשי{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <a href="{{ url_for('members') }}" class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-user-tie"></i>
+        </div>
+        <div class="stat-info">
+            <h3>סה"כ חברי כנסת</h3>
+            <p>{{ stats.members }}</p>
+        </div>
+    </a>
+
+    <a href="{{ url_for('parties') }}" class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-flag"></i>
+        </div>
+        <div class="stat-info">
+            <h3>סיעות הכנסת</h3>
+            <p>{{ stats.parties }}</p>
+        </div>
+    </a>
+
+    <a href="{{ url_for('committees') }}" class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-users-rectangle"></i>
+        </div>
+        <div class="stat-info">
+            <h3>ועדות פעילות</h3>
+            <p>{{ stats.committees }}</p>
+        </div>
+    </a>
+
+    <a href="{{ url_for('laws') }}" class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-gavel"></i>
+        </div>
+        <div class="stat-info">
+            <h3>חוקים בהכנה</h3>
+            <p>{{ stats.laws }}</p>
+        </div>
+    </a>
+</div>
+
+<div class="card fade-in" style="animation-delay: 0.2s;">
+    <div class="card-header">
+        <h3 class="card-title">מידע על הפרויקט</h3>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-secondary);">
+            ברוכים הבאים למערכת המידע המתקדמת של כנסת ישראל.
+        </p>
+        <p style="margin-bottom: 1rem;">
+            מערכת זו מאפשרת סינון וצפייה נוחה בנתוני חברי הכנסת, הסיעות, הועדות ותהליכי החקיקה מתוך מסד הנתונים מבוסס
+            Microsoft Access.
+        </p>
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <a href="{{ url_for('members') }}" class="btn btn-primary">
+                צפה ברשימת הח"כים <i class="fas fa-arrow-left"></i>
+            </a>
+            <a href="{{ url_for('parties') }}" class="btn btn-outline">
+                חלוקה מפלגתית <i class="fas fa-chart-pie"></i>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'layout.html' %}
+
+{% block title %}חוקים | מאגר הכנסת{% endblock %}
+
+{% block page_title %}ספר החוקים והחקיקה{% endblock %}
+
+{% block page_actions %}
+<div class="badge">
+    <i class="fas fa-gavel" style="margin-left: 0.5rem;"></i> {{ laws|length }} חוקים
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="table-container fade-in" style="animation-delay: 0.2s;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>שם החוק</th>
+                <th>תאריך חקיקה</th>
+                <th>פעולות</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for law in laws %}
+            <tr>
+                <td style="font-weight: 600; color: var(--primary-color);">
+                    <i class="fas fa-file-contract" style="color: var(--accent-color); margin-left: 0.5rem;"></i>
+                    {{ law.law_name }}
+                </td>
+                <td>
+                    <span class="badge" style="background-color: rgba(243, 156, 18, 0.1); color: #f39c12;">
+                        {{ law.law_date if law.law_date else 'לא פורסם' }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('law_details', law_id=law.lawID) }}" class="btn btn-outline"
+                        style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                        פרטי החוק והיוזמים <i class="fas fa-arrow-left"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if not laws %}
+    <div style="text-align: center; padding: 3rem;">
+        <i class="fas fa-exclamation-circle"
+            style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 1rem;"></i>
+        <h3>לא נמצאו חוקים</h3>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

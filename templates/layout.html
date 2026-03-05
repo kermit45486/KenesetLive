@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}מאגר הכנסת{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-landmark" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
+                <h1>מאגר דיגיטלי</h1>
+                <p class="subtitle">הכנסת בישראל</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+                        <i class="fas fa-home"></i>
+                        <span>ראשי</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('members') }}" class="nav-link {% if request.endpoint == 'members' %}active{% endif %}">
+                        <i class="fas fa-users"></i>
+                        <span>חברי כנסת</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('parties') }}" class="nav-link {% if request.endpoint == 'parties' or request.endpoint == 'party_details' %}active{% endif %}">
+                        <i class="fas fa-users-viewfinder"></i>
+                        <span>מפלגות</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('committees') }}" class="nav-link {% if request.endpoint == 'committees' or request.endpoint == 'committee_details' %}active{% endif %}">
+                        <i class="fas fa-users-gear"></i>
+                        <span>ועדות</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('laws') }}" class="nav-link {% if request.endpoint == 'laws' or request.endpoint == 'law_details' %}active{% endif %}">
+                        <i class="fas fa-scale-balanced"></i>
+                        <span>חוקים</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="page-header fade-in">
+                <h2 class="page-title">{% block page_title %}{% endblock %}</h2>
+                {% block page_actions %}{% endblock %}
+            </header>
+
+            <div class="fade-in" style="animation-delay: 0.1s;">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>

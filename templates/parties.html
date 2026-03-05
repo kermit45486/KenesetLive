@@ -1,0 +1,54 @@
+{% extends 'layout.html' %}
+
+{% block title %}מפלגות וסיעות | מאגר הכנסת{% endblock %}
+
+{% block page_title %}סיעות הכנסת{% endblock %}
+
+{% block page_actions %}
+<div class="badge">
+    <i class="fas fa-flag" style="margin-left: 0.5rem;"></i> {{ parties|length }} סיעות מיוצגות
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="table-container fade-in" style="animation-delay: 0.2s;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>שם הסיעה</th>
+                <th>תאריך הקמה/רישום</th>
+                <th style="text-align: center;">מנדטים</th>
+                <th>פעולות</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for party in parties %}
+            <tr>
+                <td style="font-weight: 600; color: var(--primary-color);">{{ party.party_name }}</td>
+                <td>{{ party.party_date }}</td>
+                <td style="text-align: center;">
+                    <div
+                        style="background-color: var(--primary-color); color: white; border-radius: 50%; width: 35px; height: 35px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold;">
+                        {{ party.mandates }}
+                    </div>
+                </td>
+                <td>
+                    <a href="{{ url_for('party_details', party_id=party.partyID) }}" class="btn btn-primary"
+                        style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                        צפה בחברים <i class="fas fa-arrow-left"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if not parties %}
+    <div style="text-align: center; padding: 3rem;">
+        <i class="fas fa-exclamation-circle"
+            style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 1rem;"></i>
+        <h3>לא נמצאו מפלגות</h3>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
