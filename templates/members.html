@@ -11,16 +11,42 @@
 {% endblock %}
 
 {% block content %}
-<div class="data-grid fade-in" style="animation-delay: 0.2s;">
+<div class="filter-controls fade-in">
+    <div class="filter-input-wrapper">
+        <i class="fas fa-search filter-search-icon"></i>
+        <input type="text" id="searchInput" placeholder="חיפוש חבר כנסת (שם מלא או חלקי)..." class="filter-input">
+    </div>
+
+    <div class="filter-select-wrapper">
+        <label for="sortField" class="filter-label">מיון לפי:</label>
+        <select id="sortField" class="filter-select">
+            <option value="firstName">שם פרטי</option>
+            <option value="lastName">שם משפחה</option>
+        </select>
+    </div>
+
+    <div class="filter-select-wrapper">
+        <label for="sortOrder" class="filter-label">סדר:</label>
+        <select id="sortOrder" class="filter-select">
+            <option value="asc">א-ת (עולה)</option>
+            <option value="desc">ת-א (יורד)</option>
+        </select>
+    </div>
+</div>
+
+<div class="data-grid fade-in" style="animation-delay: 0.2s;" id="membersGrid">
     {% for member in members %}
     <div class="card">
         <div class="card-header" style="text-align: center;">
             {% if member.photo_url %}
-            <div style="width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 1rem; overflow: hidden; border: 2px solid var(--border-color);">
-                <img src="{{ url_for('static', filename='images/mks/' ~ member.photo_url) }}" alt="{{ member.member_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+            <div
+                style="width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 1rem; overflow: hidden; border: 2px solid var(--border-color);">
+                <img src="{{ url_for('static', filename='images/mks/' ~ member.photo_url) }}"
+                    alt="{{ member.member_name }}" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
             {% else %}
-            <div style="width: 80px; height: 80px; border-radius: 50%; background-color: var(--border-color); margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white;">
+            <div
+                style="width: 80px; height: 80px; border-radius: 50%; background-color: var(--border-color); margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white;">
                 <i class="fas fa-user"></i>
             </div>
             {% endif %}
@@ -61,4 +87,63 @@
     <p>קיימת בעיה בטעינת הנתונים ממסד הנתונים.</p>
 </div>
 {% endif %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const sortField = document.getElementById('sortField');
+        const sortOrder = document.getElementById('sortOrder');
+        const container = document.getElementById('membersGrid');
+
+        if (!container) return;
+
+        const items = Array.from(container.querySelectorAll('.card'));
+
+        function updateView() {
+            const query = searchInput.value.toLowerCase().trim();
+            const field = sortField.value;
+            const order = sortOrder.value === 'asc' ? 1 : -1;
+
+            let visibleItems = items.filter(item => {
+                const nameEl = item.querySelector('.card-title');
+                const name = nameEl ? nameEl.textContent.trim().toLowerCase() : '';
+                const isMatch = name.includes(query);
+                item.style.display = isMatch ? '' : 'none';
+                return isMatch;
+            });
+
+            visibleItems.sort((a, b) => {
+                const nameElA = a.querySelector('.card-title');
+                const nameElB = b.querySelector('.card-title');
+                const nameA = nameElA ? nameElA.textContent.trim() : '';
+                const nameB = nameElB ? nameElB.textContent.trim() : '';
+
+                const partsA = nameA.split(' ').filter(Boolean);
+                const partsB = nameB.split(' ').filter(Boolean);
+
+                let valA = '', valB = '';
+                if (field === 'lastName') {
+                    valA = partsA.length > 1 ? partsA.slice(1).join(' ') : partsA[0];
+                    valB = partsB.length > 1 ? partsB.slice(1).join(' ') : partsB[0];
+                } else {
+                    valA = partsA[0] || '';
+                    valB = partsB[0] || '';
+                }
+
+                return valA.localeCompare(valB, 'he') * order;
+            });
+
+            // Use DocumentFragment for better performance
+            const fragment = document.createDocumentFragment();
+            visibleItems.forEach(item => fragment.appendChild(item));
+            container.appendChild(fragment);
+        }
+
+        searchInput.addEventListener('input', updateView);
+        sortField.addEventListener('change', updateView);
+        sortOrder.addEventListener('change', updateView);
+
+        updateView(); // Initial sort
+    });
+</script>
 {% endblock %}

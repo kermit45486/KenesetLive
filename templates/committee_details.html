@@ -29,6 +29,29 @@
 
 <h3 style="margin-bottom: 1.5rem; color: var(--text-secondary);">חברי הועדה</h3>
 
+<div class="filter-controls fade-in">
+    <div class="filter-input-wrapper">
+        <i class="fas fa-search filter-search-icon"></i>
+        <input type="text" id="searchInput" placeholder="חיפוש חבר כנסת (שם מלא או חלקי)..." class="filter-input">
+    </div>
+
+    <div class="filter-select-wrapper">
+        <label for="sortField" class="filter-label">מיון לפי:</label>
+        <select id="sortField" class="filter-select">
+            <option value="firstName">שם פרטי</option>
+            <option value="lastName">שם משפחה</option>
+        </select>
+    </div>
+
+    <div class="filter-select-wrapper">
+        <label for="sortOrder" class="filter-label">סדר:</label>
+        <select id="sortOrder" class="filter-select">
+            <option value="asc">א-ת (עולה)</option>
+            <option value="desc">ת-א (יורד)</option>
+        </select>
+    </div>
+</div>
+
 <div class="table-container fade-in" style="animation-delay: 0.3s;">
     <table class="data-table">
         <thead>
@@ -38,7 +61,7 @@
                 <th>גיל</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="membersGrid">
             {% for member in members %}
             <tr>
                 <td style="font-weight: 600; color: var(--primary-color); display: flex; align-items: center;">
@@ -83,4 +106,62 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const sortField = document.getElementById('sortField');
+        const sortOrder = document.getElementById('sortOrder');
+        const container = document.getElementById('membersGrid');
+
+        if (!container) return;
+
+        const items = Array.from(container.querySelectorAll('tr'));
+
+        function updateView() {
+            const query = searchInput.value.toLowerCase().trim();
+            const field = sortField.value;
+            const order = sortOrder.value === 'asc' ? 1 : -1;
+
+            let visibleItems = items.filter(item => {
+                const nameEl = item.querySelector('td:first-child a');
+                const name = nameEl ? nameEl.textContent.trim().toLowerCase() : '';
+                const isMatch = name.includes(query);
+                item.style.display = isMatch ? '' : 'none';
+                return isMatch;
+            });
+
+            visibleItems.sort((a, b) => {
+                const nameElA = a.querySelector('td:first-child a');
+                const nameElB = b.querySelector('td:first-child a');
+                const nameA = nameElA ? nameElA.textContent.trim() : '';
+                const nameB = nameElB ? nameElB.textContent.trim() : '';
+
+                const partsA = nameA.split(' ').filter(Boolean);
+                const partsB = nameB.split(' ').filter(Boolean);
+
+                let valA = '', valB = '';
+                if (field === 'lastName') {
+                    valA = partsA.length > 1 ? partsA.slice(1).join(' ') : partsA[0];
+                    valB = partsB.length > 1 ? partsB.slice(1).join(' ') : partsB[0];
+                } else {
+                    valA = partsA[0] || '';
+                    valB = partsB[0] || '';
+                }
+
+                return valA.localeCompare(valB, 'he') * order;
+            });
+
+            const fragment = document.createDocumentFragment();
+            visibleItems.forEach(item => fragment.appendChild(item));
+            container.appendChild(fragment);
+        }
+
+        searchInput.addEventListener('input', updateView);
+        sortField.addEventListener('change', updateView);
+        sortOrder.addEventListener('change', updateView);
+
+        updateView(); // Initial sort
+    });
+</script>
 {% endblock %}
