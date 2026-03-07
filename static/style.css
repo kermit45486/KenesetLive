@@ -8,9 +8,9 @@
   --text-primary: #333333;
   --text-secondary: #7f8c8d;
   --border-color: #e0e6ed;
-  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
   --border-radius: 12px;
   --transition: all 0.3s ease;
 }
@@ -26,7 +26,8 @@ body {
   background-color: var(--background-color);
   color: var(--text-primary);
   line-height: 1.6;
-  direction: rtl; /* Right to left for Hebrew */
+  direction: rtl;
+  /* Right to left for Hebrew */
 }
 
 /* Layout */
@@ -51,7 +52,7 @@ body {
 
 .sidebar-header {
   padding: 0 2rem 2rem;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 2rem;
   text-align: center;
 }
@@ -97,7 +98,8 @@ body {
   font-size: 1.2rem;
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link:hover,
+.nav-link.active {
   background-color: var(--secondary-color);
   color: white;
 }
@@ -116,7 +118,8 @@ body {
 /* Main Content */
 .main-content {
   flex: 1;
-  margin-right: 280px; /* Offset for sidebar */
+  margin-right: 280px;
+  /* Offset for sidebar */
   padding: 3rem;
   max-width: 1400px;
 }
@@ -192,8 +195,8 @@ body {
 /* Grid Layouts for Data */
 .data-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
 }
 
 /* Card Styles */
@@ -249,6 +252,55 @@ body {
   color: var(--text-secondary);
   margin-left: 0.5rem;
   margin-top: 0.2rem;
+}
+
+/* Profile Image Downscaling Fixes */
+.profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  /* Focus on the face at the top of the photo */
+  image-rendering: high-quality;
+  image-rendering: -webkit-optimize-contrast;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* New display sizes for MK portraits - Square Redesign with Aspect Ratio Fix */
+.profile-img-large {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  /* Professional portrait ratio to prevent cutting faces */
+  height: auto;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  border-bottom: 3px solid var(--accent-color);
+}
+
+.profile-img-hero {
+  width: 180px;
+  height: 180px;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  /* Square with rounded corners */
+  border: 4px solid white;
+  box-shadow: var(--shadow-md);
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.profile-img-md {
+  width: 50px;
+  height: 50px;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  /* Square with rounded corners */
+  flex-shrink: 0;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .card-footer {
@@ -311,7 +363,8 @@ body {
   border-collapse: collapse;
 }
 
-.data-table th, .data-table td {
+.data-table th,
+.data-table td {
   padding: 1.2rem 1.5rem;
   text-align: right;
   border-bottom: 1px solid var(--border-color);
@@ -351,8 +404,15 @@ body {
 
 /* Animation */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .fade-in {
@@ -427,7 +487,8 @@ body {
   transition: var(--transition);
 }
 
-.filter-input:focus, .filter-select:focus {
+.filter-input:focus,
+.filter-select:focus {
   border-color: var(--accent-color);
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
 }
@@ -437,17 +498,23 @@ body {
   .sidebar {
     width: 80px;
   }
-  .sidebar-header h1, .sidebar-header .subtitle, .nav-link span {
+
+  .sidebar-header h1,
+  .sidebar-header .subtitle,
+  .nav-link span {
     display: none;
   }
+
   .nav-link i {
     margin-left: 0;
     font-size: 1.5rem;
   }
+
   .nav-link {
     justify-content: center;
     padding: 1.5rem 0;
   }
+
   .main-content {
     margin-right: 80px;
   }
@@ -457,19 +524,23 @@ body {
   .app-container {
     flex-direction: column;
   }
+
   .sidebar {
     width: 100%;
     height: auto;
     position: relative;
     padding: 1rem 0;
   }
+
   .nav-menu {
     flex-direction: row;
     justify-content: space-around;
   }
+
   .nav-link i {
     font-size: 1.2rem;
   }
+
   .main-content {
     margin-right: 0;
     padding: 1.5rem;

@@ -66,14 +66,13 @@
             <tr>
                 <td style="font-weight: 600; color: var(--primary-color); display: flex; align-items: center;">
                     {% if member.photo_url %}
-                    <div
-                        style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; margin-left: 0.5rem; flex-shrink: 0; display: inline-block; vertical-align: middle;">
+                    <div style="margin-left: 0.5rem; display: inline-block; vertical-align: middle;">
                         <img src="{{ url_for('static', filename='images/mks/' ~ member.photo_url) }}"
-                            alt="{{ member.member_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            alt="{{ member.member_name }}" class="profile-img profile-img-md">
                     </div>
                     {% else %}
                     <i class="fas fa-user"
-                        style="color: var(--accent-color); margin-left: 0.5rem; display: inline-block; vertical-align: middle;"></i>
+                        style="color: var(--accent-color); font-size: 2.5rem; margin-left: 0.5rem; display: inline-block; vertical-align: middle;"></i>
                     {% endif %}
                     <a href="{{ url_for('member_details', member_id=member.knesetmemberID) }}"
                         style="color: inherit; text-decoration: none; transition: color 0.3s;"
