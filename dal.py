@@ -41,7 +41,10 @@ class DatabaseConnection:
         cursor.execute(query, args)
         try:
             columns = [col[0] for col in cursor.description]
-            rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            rows = [
+                {k: (v.strip() if isinstance(v, str) else v) for k, v in zip(columns, row)}
+                for row in cursor.fetchall()
+            ]
             return (rows[0] if rows else None) if one else rows
         except pyodbc.ProgrammingError:
             return None
@@ -57,7 +60,7 @@ class DatabaseConnection:
         """Return all members joined with their party name, ordered alphabetically."""
         return self._execute("""
             SELECT m.knesetmemberID, m.member_name, m.age, m.job, m.photo_url,
-                   m.partyID, p.party_name
+                   m.partyID, p.party_name, p.photo_url AS party_logo
             FROM knesetmembers m
             LEFT JOIN parties p ON m.partyID = p.partyID
             ORDER BY m.member_name
@@ -66,7 +69,7 @@ class DatabaseConnection:
     def get_member_by_id(self, member_id: int) -> dict | None:
         """Return a single member with party info, or None if not found."""
         return self._execute("""
-            SELECT m.*, m.photo_url, p.party_name
+            SELECT m.*, m.photo_url, p.party_name, p.photo_url AS party_logo
             FROM knesetmembers m
             LEFT JOIN parties p ON m.partyID = p.partyID
             WHERE m.knesetmemberID = ?
@@ -128,17 +131,26 @@ class DatabaseConnection:
         return self._execute("SELECT * FROM commities ORDER BY commitie_name")
 
     def get_committee_by_id(self, committee_id: int) -> dict | None:
-        """Return a single committee or None if not found."""
-        return self._execute(
-            "SELECT * FROM commities WHERE commitieID = ?",
-            (committee_id,), one=True,
-        )
+        """Return a single committee with leader info, or None if not found."""
+        return self._execute("""
+            SELECT c.*, m.member_name AS leader_name,
+                   m.photo_url AS leader_photo,
+                   m.knesetmemberID AS leader_member_id,
+                   m.age AS leader_age,
+                   m.partyID AS leader_party_id,
+                   p.party_name AS leader_party_name,
+                   p.photo_url AS leader_party_logo
+            FROM (commities c
+            LEFT JOIN knesetmembers m ON c.LeaderID = m.knesetmemberID)
+            LEFT JOIN parties p ON m.partyID = p.partyID
+            WHERE c.commitieID = ?
+        """, (committee_id,), one=True)
 
     def get_committee_members(self, committee_id: int) -> list[dict]:
         """Return all members belonging to a committee."""
         return self._execute("""
             SELECT m.knesetmemberID, m.member_name, m.age, m.photo_url,
-                   m.partyID, p.party_name
+                   m.partyID, p.party_name, p.photo_url AS party_logo
             FROM (knesetmemberscommities kc
             INNER JOIN knesetmembers m ON kc.knesetmemberID = m.knesetmemberID)
             LEFT JOIN parties p ON m.partyID = p.partyID
@@ -166,7 +178,8 @@ class DatabaseConnection:
     def get_law_members(self, law_id: int) -> list[dict]:
         """Return all members associated with a law."""
         return self._execute("""
-            SELECT m.knesetmemberID, m.member_name, m.photo_url, m.partyID, p.party_name
+            SELECT m.knesetmemberID, m.member_name, m.photo_url, m.partyID, p.party_name,
+                   p.photo_url AS party_logo
             FROM (knesetmemberslaws kl
             INNER JOIN knesetmembers m ON kl.knesetmemberID = m.knesetmemberID)
             LEFT JOIN parties p ON m.partyID = p.partyID

@@ -3,7 +3,7 @@
 {% block title %}{{ committee.commitie_name }} | מאגר הכנסת{% endblock %}
 
 {% block page_title %}
-<a href="{{ url_for('committees') }}"
+<a href="javascript:history.back()"
     style="color: var(--text-secondary); text-decoration: none; font-size: 1.5rem; margin-left: 1rem;">
     <i class="fas fa-arrow-right"></i>
 </a>
@@ -27,6 +27,66 @@
     </div>
 </div>
 
+{% if committee.leader_name %}
+<div class="card fade-in" style="margin-bottom: 2rem; animation-delay: 0.1s;">
+    <div class="card-header">
+        <h3 class="card-title">
+            יושב/ת ראש הועדה
+        </h3>
+    </div>
+    <div class="card-body" style="display: flex; align-items: center; gap: 1.5rem;">
+        {% if committee.leader_photo %}
+        <a href="{{ url_for('member_details', member_id=committee.leader_member_id) }}">
+            <img src="{{ url_for('static', filename='images/mks/' ~ committee.leader_photo) }}"
+                alt="{{ committee.leader_name }}" class="profile-img profile-img-hero"
+                style="width: 100px; height: 100px;">
+        </a>
+        {% else %}
+        <div
+            style="width: 100px; height: 100px; border-radius: 12px; background-color: var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: var(--accent-color); flex-shrink: 0; border: 4px solid white; box-shadow: var(--shadow-md);">
+            <i class="fas fa-user"></i>
+        </div>
+        {% endif %}
+        <div>
+            <a href="{{ url_for('member_details', member_id=committee.leader_member_id) }}"
+                style="font-size: 1.4rem; font-weight: 700; color: var(--primary-color); text-decoration: none; transition: color 0.3s;"
+                onmouseover="this.style.color='var(--accent-color)'"
+                onmouseout="this.style.color='var(--primary-color)'">
+                {{ committee.leader_name }}
+            </a>
+            <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem; align-items: center;">
+                <span style="color: var(--text-secondary); font-size: 0.95rem; font-weight: bold;">
+                    יושב/ת ראש
+                </span>
+
+                {% if committee.leader_party_logo and committee.leader_party_id %}
+                <a href="{{ url_for('party_details', party_id=committee.leader_party_id) }}"
+                    title="{{ committee.leader_party_name }}"
+                    style="display: inline-block; transition: transform 0.2s, opacity 0.2s;"
+                    onmouseover="this.style.transform='scale(1.1)'; this.style.opacity='0.85'"
+                    onmouseout="this.style.transform='scale(1)'; this.style.opacity='1'">
+                    <img src="{{ url_for('static', filename='images/parties/' ~ committee.leader_party_logo) }}"
+                        alt="{{ committee.leader_party_name }}"
+                        style="height: 30px; width: auto; object-fit: contain; vertical-align: middle;">
+                </a>
+                {% elif committee.leader_party_name %}
+                <a href="{{ url_for('party_details', party_id=committee.leader_party_id) }}" class="badge"
+                    style="background-color: rgba(52, 152, 219, 0.1); color: var(--accent-color); text-decoration: none;">
+                    {{ committee.leader_party_name }}
+                </a>
+                {% endif %}
+
+                {% if committee.leader_age %}
+                <span style="color: var(--text-secondary); font-size: 0.95rem;">
+                    גיל: {{ committee.leader_age }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <h3 style="margin-bottom: 1.5rem; color: var(--text-secondary);">חברי הועדה</h3>
 
 <div class="filter-controls fade-in">
@@ -40,6 +100,7 @@
         <select id="sortField" class="filter-select">
             <option value="firstName">שם פרטי</option>
             <option value="lastName">שם משפחה</option>
+            <option value="party">מפלגה</option>
         </select>
     </div>
 
@@ -57,13 +118,13 @@
         <thead>
             <tr>
                 <th>שם חבר/ת הכנסת</th>
-                <th>סיעה</th>
+                <th style="text-align: center;">סיעה</th>
                 <th>גיל</th>
             </tr>
         </thead>
         <tbody id="membersGrid">
             {% for member in members %}
-            <tr>
+            <tr data-party="{{ member.party_name if member.party_name else '' }}">
                 <td style="font-weight: 600; color: var(--primary-color); display: flex; align-items: center;">
                     {% if member.photo_url %}
                     <div style="margin-left: 0.5rem; display: inline-block; vertical-align: middle;">
@@ -79,11 +140,19 @@
                         onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='inherit'">{{
                         member.member_name }}</a>
                 </td>
-                <td>
-                    {% if member.party_name and member.partyID %}
+                <td style="text-align: center;">
+                    {% if member.party_logo and member.partyID %}
+                    <a href="{{ url_for('party_details', party_id=member.partyID) }}" title="{{ member.party_name }}"
+                        style="display: inline-block; transition: transform 0.2s, opacity 0.2s;"
+                        onmouseover="this.style.transform='scale(1.15)'; this.style.opacity='0.85'"
+                        onmouseout="this.style.transform='scale(1)'; this.style.opacity='1'">
+                        <img src="{{ url_for('static', filename='images/parties/' ~ member.party_logo) }}"
+                            alt="{{ member.party_name }}"
+                            style="height: 36px; width: auto; object-fit: contain; vertical-align: middle;">
+                    </a>
+                    {% elif member.party_name and member.partyID %}
                     <a href="{{ url_for('party_details', party_id=member.partyID) }}" class="badge"
-                        style="background-color: rgba(52, 152, 219, 0.1); color: var(--accent-color); text-decoration: none; transition: opacity 0.3s;"
-                        onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+                        style="background-color: rgba(52, 152, 219, 0.1); color: var(--accent-color); text-decoration: none;">
                         {{ member.party_name }}
                     </a>
                     {% else %}
@@ -131,24 +200,39 @@
             });
 
             visibleItems.sort((a, b) => {
-                const nameElA = a.querySelector('td:first-child a');
-                const nameElB = b.querySelector('td:first-child a');
-                const nameA = nameElA ? nameElA.textContent.trim() : '';
-                const nameB = nameElB ? nameElB.textContent.trim() : '';
-
-                const partsA = nameA.split(' ').filter(Boolean);
-                const partsB = nameB.split(' ').filter(Boolean);
-
                 let valA = '', valB = '';
-                if (field === 'lastName') {
-                    valA = partsA.length > 1 ? partsA.slice(1).join(' ') : partsA[0];
-                    valB = partsB.length > 1 ? partsB.slice(1).join(' ') : partsB[0];
+
+                if (field === 'party') {
+                    valA = a.getAttribute('data-party') || 'תתת';
+                    valB = b.getAttribute('data-party') || 'תתת';
                 } else {
-                    valA = partsA[0] || '';
-                    valB = partsB[0] || '';
+                    const nameElA = a.querySelector('td:first-child a');
+                    const nameElB = b.querySelector('td:first-child a');
+                    const nameA = nameElA ? nameElA.textContent.trim() : '';
+                    const nameB = nameElB ? nameElB.textContent.trim() : '';
+
+                    const partsA = nameA.split(' ').filter(Boolean);
+                    const partsB = nameB.split(' ').filter(Boolean);
+
+                    if (field === 'lastName') {
+                        valA = partsA.length > 1 ? partsA.slice(1).join(' ') : partsA[0];
+                        valB = partsB.length > 1 ? partsB.slice(1).join(' ') : partsB[0];
+                    } else {
+                        valA = partsA[0] || '';
+                        valB = partsB[0] || '';
+                    }
                 }
 
-                return valA.localeCompare(valB, 'he') * order;
+                let cmp = valA.localeCompare(valB, 'he') * order;
+                if (cmp === 0 && field === 'party') {
+                    const nameElA = a.querySelector('td:first-child a');
+                    const nameElB = b.querySelector('td:first-child a');
+                    const nameA = nameElA ? nameElA.textContent.trim() : '';
+                    const nameB = nameElB ? nameElB.textContent.trim() : '';
+                    cmp = nameA.localeCompare(nameB, 'he') * order;
+                }
+
+                return cmp;
             });
 
             const fragment = document.createDocumentFragment();

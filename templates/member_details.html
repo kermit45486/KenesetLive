@@ -7,12 +7,20 @@
     style="color: var(--text-secondary); text-decoration: none; font-size: 1.5rem; margin-left: 1rem;">
     <i class="fas fa-arrow-right"></i>
 </a>
-פרופיל אישי: {{ member.member_name }}
+{{ member.member_name }}
 {% endblock %}
 
 {% block page_actions %}
-<div style="display: flex; gap: 1rem;">
-    {% if member.party_name and member.partyID %}
+<div style="display: flex; gap: 1rem; align-items: center;">
+    {% if member.party_logo and member.partyID %}
+    <a href="{{ url_for('party_details', party_id=member.partyID) }}" title="{{ member.party_name }}"
+        style="display: inline-flex; align-items: center; transition: transform 0.2s, opacity 0.2s;"
+        onmouseover="this.style.transform='scale(1.15)'; this.style.opacity='0.85'"
+        onmouseout="this.style.transform='scale(1)'; this.style.opacity='1'">
+        <img src="{{ url_for('static', filename='images/parties/' ~ member.party_logo) }}" alt="{{ member.party_name }}"
+            style="height: 40px; width: auto; object-fit: contain;">
+    </a>
+    {% elif member.party_name and member.partyID %}
     <a href="{{ url_for('party_details', party_id=member.partyID) }}" class="badge"
         style="background-color: rgba(52, 152, 219, 0.1); color: var(--accent-color); text-decoration: none; transition: opacity 0.3s;"
         onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">

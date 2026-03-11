@@ -3,7 +3,7 @@
 {% block title %}{{ law.law_name }} | מאגר הכנסת{% endblock %}
 
 {% block page_title %}
-<a href="{{ url_for('laws') }}"
+<a href="javascript:history.back()"
     style="color: var(--text-secondary); text-decoration: none; font-size: 1.5rem; margin-left: 1rem;">
     <i class="fas fa-arrow-right"></i>
 </a>
@@ -39,7 +39,7 @@
         <thead>
             <tr>
                 <th>שם חבר/ת הכנסת</th>
-                <th>סיעה</th>
+                <th style="text-align: center;">סיעה</th>
             </tr>
         </thead>
         <tbody id="membersGrid">
@@ -60,11 +60,19 @@
                         onmouseover="this.style.color='var(--accent-color)'" onmouseout="this.style.color='inherit'">{{
                         member.member_name }}</a>
                 </td>
-                <td>
-                    {% if member.party_name and member.partyID %}
+                <td style="text-align: center;">
+                    {% if member.party_logo and member.partyID %}
+                    <a href="{{ url_for('party_details', party_id=member.partyID) }}" title="{{ member.party_name }}"
+                        style="display: inline-block; transition: transform 0.2s, opacity 0.2s;"
+                        onmouseover="this.style.transform='scale(1.15)'; this.style.opacity='0.85'"
+                        onmouseout="this.style.transform='scale(1)'; this.style.opacity='1'">
+                        <img src="{{ url_for('static', filename='images/parties/' ~ member.party_logo) }}"
+                            alt="{{ member.party_name }}"
+                            style="height: 36px; width: auto; object-fit: contain; vertical-align: middle;">
+                    </a>
+                    {% elif member.party_name and member.partyID %}
                     <a href="{{ url_for('party_details', party_id=member.partyID) }}" class="badge"
-                        style="background-color: rgba(52, 152, 219, 0.1); color: var(--accent-color); text-decoration: none; transition: opacity 0.3s;"
-                        onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+                        style="background-color: rgba(52, 152, 219, 0.1); color: var(--accent-color); text-decoration: none;">
                         {{ member.party_name }}
                     </a>
                     {% else %}

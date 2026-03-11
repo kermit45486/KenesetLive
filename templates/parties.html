@@ -24,7 +24,15 @@
         <tbody>
             {% for party in parties %}
             <tr>
-                <td style="font-weight: 600; color: var(--primary-color);">{{ party.party_name }}</td>
+                <td style="font-weight: 600; color: var(--primary-color);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        {% if party.photo_url %}
+                        <img src="{{ url_for('static', filename='images/parties/' ~ party.photo_url) }}"
+                            alt="{{ party.party_name }}" style="height: 32px; width: auto; object-fit: contain;">
+                        {% endif %}
+                        <span>{{ party.party_name }}</span>
+                    </div>
+                </td>
                 <td>{{ party.party_date }}</td>
                 <td style="text-align: center;">
                     <div
