@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>התחברות | מאגר הכנסת</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="login-body">
+    <div class="login-container fade-in">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="fas fa-landmark"></i>
+                <h1>מאגר הכנסת</h1>
+                <p>התחברות למערכת הניהול</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" class="login-form">
+                <div class="form-group">
+                    <label for="username">
+                        <i class="fas fa-user"></i> שם משתמש
+                    </label>
+                    <input type="text" id="username" name="username" class="form-control"
+                           placeholder="הכנס שם משתמש" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i> סיסמה
+                    </label>
+                    <input type="password" id="password" name="password" class="form-control"
+                           placeholder="הכנס סיסמה" required>
+                </div>
+                <button type="submit" class="btn btn-primary login-btn">
+                    <i class="fas fa-sign-in-alt"></i> התחבר
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <a href="{{ url_for('index') }}">
+                    <i class="fas fa-arrow-right"></i> חזרה לאתר
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

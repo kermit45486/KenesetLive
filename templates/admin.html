@@ -1,0 +1,615 @@
+{% extends 'layout.html' %}
+
+{% block title %}ניהול | מאגר הכנסת{% endblock %}
+
+{% block page_title %}לוח ניהול{% endblock %}
+
+{% block page_actions %}
+<div style="display: flex; gap: 1rem; align-items: center;">
+    <span class="badge">
+        <i class="fas fa-user-shield" style="margin-left: 0.5rem;"></i>
+        מחובר כ: {{ session.get('username', '') }}
+    </span>
+    <a href="{{ url_for('logout') }}" class="btn btn-outline" style="font-size: 0.85rem;">
+        <i class="fas fa-sign-out-alt"></i> התנתק
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+{% macro tag_selector(field_name, items, selected_ids, item_id_key, item_name_key, container_id) %}
+<div class="tags-container" id="{{ container_id }}-tags"
+    style="display:flex; flex-wrap:wrap; min-height:45px; border:1px solid var(--border-color); padding:0.5rem; border-radius:6px; margin-bottom:0.5rem; align-items:center; background:var(--bg-card);">
+    {% for item in items %}
+    {% if item[item_id_key] in selected_ids %}
+    <span class="tag-item" data-id="{{ item[item_id_key] }}"
+        style="display:inline-flex; align-items:center; gap:0.5rem; margin:0.2rem; padding:0.3rem 0.8rem; border-radius:15px; background-color:var(--primary-color); color:white; font-size:0.85rem; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+        {{ item[item_name_key] }}
+        <i class="fas fa-times" style="cursor:pointer; opacity:0.8;" onmouseover="this.style.opacity='1'"
+            onmouseout="this.style.opacity='0.8'" onclick="removeTag(this, '{{ field_name }}')"></i>
+        <input type="hidden" name="{{ field_name }}" value="{{ item[item_id_key] }}">
+    </span>
+    {% endif %}
+    {% endfor %}
+</div>
+<div class="add-tag-controls" style="display:flex; gap:0.5rem;">
+    <select id="{{ container_id }}-select" class="form-control" style="flex:1;">
+        <option value="">-- בחר מרשימה --</option>
+        {% for item in items %}
+        <option value="{{ item[item_id_key] }}" data-name="{{ item[item_name_key] }}" {% if item[item_id_key] in
+            selected_ids %}style="display:none;" {% endif %}>{{ item[item_name_key] }}</option>
+        {% endfor %}
+    </select>
+    <button type="button" class="btn btn-outline" style="padding:0.4rem 1rem;"
+        onclick="addTag('{{ container_id }}-select', '{{ container_id }}-tags', '{{ field_name }}')">
+        <i class="fas fa-plus"></i> הוסף
+    </button>
+</div>
+{% endmacro %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }} fade-in" style="margin-bottom: 1.5rem;">
+    <i class="fas fa-{% if category == 'success' %}check-circle{% else %}exclamation-triangle{% endif %}"></i>
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<!-- Tabs -->
+<div class="admin-tabs fade-in">
+    <button class="admin-tab active" onclick="switchTab('members')" id="tab-members">
+        <i class="fas fa-users"></i> חברי כנסת
+    </button>
+    <button class="admin-tab" onclick="switchTab('parties')" id="tab-parties">
+        <i class="fas fa-users-viewfinder"></i> מפלגות
+    </button>
+    <button class="admin-tab" onclick="switchTab('committees')" id="tab-committees">
+        <i class="fas fa-users-gear"></i> ועדות
+    </button>
+    <button class="admin-tab" onclick="switchTab('laws')" id="tab-laws">
+        <i class="fas fa-scale-balanced"></i> חוקים
+    </button>
+</div>
+
+<!-- ════════════════════ MEMBERS TAB ════════════════════ -->
+<div class="admin-panel" id="panel-members">
+    <div class="admin-section-header">
+        <h3><i class="fas fa-users"></i> חברי כנסת ({{ members|length }})</h3>
+        <button class="btn btn-primary" onclick="toggleForm('add-member-form')">
+            <i class="fas fa-plus"></i> הוסף חבר כנסת
+        </button>
+    </div>
+
+    <!-- Add Form -->
+    <div class="admin-form-container" id="add-member-form" style="display: none;">
+        <form method="POST" action="{{ url_for('admin_add_member') }}" class="admin-form" enctype="multipart/form-data">
+            <h4>הוספת חבר כנסת חדש</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>שם</label>
+                    <input type="text" name="member_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>גיל</label>
+                    <input type="number" name="age" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>תפקיד</label>
+                    <input type="text" name="job" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>מפלגה</label>
+                    <select name="partyID" class="form-control" required>
+                        {% for p in parties %}
+                        <option value="{{ p.partyID }}">{{ p.party_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ועדות בהן חבר</label>
+                    {{ tag_selector('committee_ids', committees, [], 'commitieID', 'commitie_name',
+                    'add-member-committees') }}
+                </div>
+                <div class="form-group">
+                    <label>חוקים שהציע</label>
+                    {{ tag_selector('law_ids', laws, [], 'lawID', 'law_name', 'add-member-laws') }}
+                </div>
+            </div>
+            <div class="form-group">
+                <label>תמונה</label>
+                <input type="file" name="photo" class="form-control" accept="image/*">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> שמור</button>
+                <button type="button" class="btn btn-outline" onclick="toggleForm('add-member-form')">ביטול</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>שם</th>
+                    <th>גיל</th>
+                    <th>תפקיד</th>
+                    <th>מפלגה</th>
+                    <th>פעולות</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in members %}
+                <tr>
+                    <td>{{ m.member_name }}</td>
+                    <td>{{ m.age }}</td>
+                    <td>{{ m.job }}</td>
+                    <td>{{ m.party_name }}</td>
+                    <td>
+                        <button class="btn btn-outline btn-sm"
+                            onclick="toggleForm('edit-member-{{ m.knesetmemberID }}')">
+                            <i class="fas fa-edit"></i> ערוך
+                        </button>
+                    </td>
+                </tr>
+                <tr class="edit-row" id="edit-member-{{ m.knesetmemberID }}" style="display: none;">
+                    <td colspan="5">
+                        <form method="POST" action="{{ url_for('admin_edit_member', item_id=m.knesetmemberID) }}"
+                            class="admin-form inline-form" enctype="multipart/form-data" style="position: relative;">
+                            <button type="button" class="delete-trigger-btn"
+                                style="position: absolute; top: 1rem; left: 1rem; padding: 0.35rem 0.65rem; z-index: 10; border-radius: 6px; background: #dc3545; color: white; border: none; cursor: pointer; font-size: 0.875rem;"
+                                data-delete-msg="האם אתה בטוח שברצונך למחוק חבר כנסת זה? הפעולה בלתי הפיכה."
+                                data-delete-url="{{ url_for('admin_delete_member', item_id=m.knesetmemberID) }}"
+                                title="מחק חבר כנסת"><i class="fas fa-trash"></i> מחק</button>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>שם</label>
+                                    <input type="text" name="member_name" value="{{ m.member_name }}"
+                                        class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>גיל</label>
+                                    <input type="number" name="age" value="{{ m.age }}" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>תפקיד</label>
+                                    <input type="text" name="job" value="{{ m.job }}" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>מפלגה</label>
+                                    <select name="partyID" class="form-control" required>
+                                        {% for p in parties %}
+                                        <option value="{{ p.partyID }}" {% if p.partyID==m.partyID %}selected{% endif
+                                            %}>{{ p.party_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>ועדות בהן חבר</label>
+                                    {{ tag_selector('committee_ids', committees, m.committee_ids, 'commitieID',
+                                    'commitie_name', 'edit-member-'~m.knesetmemberID~'-committees') }}
+                                </div>
+                                <div class="form-group">
+                                    <label>חוקים שהציע</label>
+                                    {{ tag_selector('law_ids', laws, m.law_ids, 'lawID', 'law_name',
+                                    'edit-member-'~m.knesetmemberID~'-laws') }}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>תמונה (ניתן להעלות חדשה)</label>
+                                <input type="file" name="photo" class="form-control" accept="image/*">
+                                {% if m.photo_url %}
+                                <div style="margin-top:0.5rem;"><small>תמונה נוכחית: <a href="{{ m.photo_url }}"
+                                            target="_blank">צפייה</a></small></div>
+                                {% endif %}
+                                <input type="hidden" name="existing_photo_url" value="{{ m.photo_url or '' }}">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> עדכן</button>
+                                <button type="button" class="btn btn-outline"
+                                    onclick="toggleForm('edit-member-{{ m.knesetmemberID }}')">ביטול</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ════════════════════ PARTIES TAB ════════════════════ -->
+<div class="admin-panel" id="panel-parties" style="display: none;">
+    <div class="admin-section-header">
+        <h3><i class="fas fa-users-viewfinder"></i> מפלגות ({{ parties|length }})</h3>
+        <button class="btn btn-primary" onclick="toggleForm('add-party-form')">
+            <i class="fas fa-plus"></i> הוסף מפלגה
+        </button>
+    </div>
+
+    <div class="admin-form-container" id="add-party-form" style="display: none;">
+        <form method="POST" action="{{ url_for('admin_add_party') }}" class="admin-form" enctype="multipart/form-data">
+            <h4>הוספת מפלגה חדשה</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>שם מפלגה</label>
+                    <input type="text" name="party_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>מנדטים</label>
+                    <input type="number" name="mandates" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>לוגו מפלגה</label>
+                    <input type="file" name="photo" class="form-control" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>חברי המפלגה</label>
+                    {{ tag_selector('member_ids', members, [], 'knesetmemberID', 'member_name', 'add-party-members') }}
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> שמור</button>
+                <button type="button" class="btn btn-outline" onclick="toggleForm('add-party-form')">ביטול</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>שם מפלגה</th>
+                    <th>מנדטים</th>
+                    <th>פעולות</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in parties %}
+                <tr>
+                    <td>{{ p.party_name }}</td>
+                    <td>{{ p.mandates }}</td>
+                    <td>
+                        <button class="btn btn-outline btn-sm" onclick="toggleForm('edit-party-{{ p.partyID }}')">
+                            <i class="fas fa-edit"></i> ערוך
+                        </button>
+                    </td>
+                </tr>
+                <tr class="edit-row" id="edit-party-{{ p.partyID }}" style="display: none;">
+                    <td colspan="3">
+                        <form method="POST" action="{{ url_for('admin_edit_party', item_id=p.partyID) }}"
+                            class="admin-form inline-form" enctype="multipart/form-data" style="position: relative;">
+                            <button type="button" class="delete-trigger-btn"
+                                style="position: absolute; top: 1rem; left: 1rem; padding: 0.35rem 0.65rem; z-index: 10; border-radius: 6px; background: #dc3545; color: white; border: none; cursor: pointer; font-size: 0.875rem;"
+                                data-delete-msg="האם אתה בטוח שברצונך למחוק מפלגה זו? חברי הכנסת המשוייכים אליה ישארו ללא מפלגה."
+                                data-delete-url="{{ url_for('admin_delete_party', item_id=p.partyID) }}"
+                                title="מחק מפלגה"><i class="fas fa-trash"></i> מחק</button>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>שם מפלגה</label>
+                                    <input type="text" name="party_name" value="{{ p.party_name }}" class="form-control"
+                                        required>
+                                </div>
+                                <div class="form-group">
+                                    <label>מנדטים</label>
+                                    <input type="number" name="mandates" value="{{ p.mandates }}" class="form-control"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group" style="flex:1;">
+                                    <label>לוגו מפלגה (ניתן להעלות חדש)</label>
+                                    <input type="file" name="photo" class="form-control" accept="image/*">
+                                    {% if p.photo_url %}
+                                    <div style="margin-top:0.5rem;"><small>לוגו נוכחי: <a href="{{ p.photo_url }}"
+                                                target="_blank">צפייה</a></small></div>
+                                    {% endif %}
+                                    <input type="hidden" name="existing_photo_url" value="{{ p.photo_url or '' }}">
+                                </div>
+                                <div class="form-group" style="flex:1;">
+                                    <label>חברי המפלגה</label>
+                                    {{ tag_selector('member_ids', members, p.member_ids, 'knesetmemberID',
+                                    'member_name', 'edit-party-'~p.partyID~'-members') }}
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> עדכן</button>
+                                <button type="button" class="btn btn-outline"
+                                    onclick="toggleForm('edit-party-{{ p.partyID }}')">ביטול</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ════════════════════ COMMITTEES TAB ════════════════════ -->
+<div class="admin-panel" id="panel-committees" style="display: none;">
+    <div class="admin-section-header">
+        <h3><i class="fas fa-users-gear"></i> ועדות ({{ committees|length }})</h3>
+        <button class="btn btn-primary" onclick="toggleForm('add-committee-form')">
+            <i class="fas fa-plus"></i> הוסף ועדה
+        </button>
+    </div>
+
+    <div class="admin-form-container" id="add-committee-form" style="display: none;">
+        <form method="POST" action="{{ url_for('admin_add_committee') }}" class="admin-form">
+            <h4>הוספת ועדה חדשה</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>שם ועדה</label>
+                    <input type="text" name="commitie_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>ראש ועדה (ID)</label>
+                    <select name="LeaderID" class="form-control" required>
+                        {% for m in members %}
+                        <option value="{{ m.knesetmemberID }}">{{ m.member_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>תיאור</label>
+                <textarea name="description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>חברי ועדה</label>
+                {{ tag_selector('member_ids', members, [], 'knesetmemberID', 'member_name', 'add-committee-members') }}
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> שמור</button>
+                <button type="button" class="btn btn-outline" onclick="toggleForm('add-committee-form')">ביטול</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>שם ועדה</th>
+                    <th>תיאור</th>
+                    <th>פעולות</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in committees %}
+                <tr>
+                    <td>{{ c.commitie_name }}</td>
+                    <td>{{ (c.description or '')[:60] }}{% if c.description and c.description|length > 60 %}...{% endif
+                        %}</td>
+                    <td>
+                        <button class="btn btn-outline btn-sm"
+                            onclick="toggleForm('edit-committee-{{ c.commitieID }}')">
+                            <i class="fas fa-edit"></i> ערוך
+                        </button>
+                    </td>
+                </tr>
+                <tr class="edit-row" id="edit-committee-{{ c.commitieID }}" style="display: none;">
+                    <td colspan="3">
+                        <form method="POST" action="{{ url_for('admin_edit_committee', item_id=c.commitieID) }}"
+                            class="admin-form inline-form" style="position: relative;">
+                            <button type="button" class="delete-trigger-btn"
+                                style="position: absolute; top: 1rem; left: 1rem; padding: 0.35rem 0.65rem; z-index: 10; border-radius: 6px; background: #dc3545; color: white; border: none; cursor: pointer; font-size: 0.875rem;"
+                                data-delete-msg="האם אתה בטוח שברצונך למחוק ועדה זו? שיוך הפעולה יוסר מכל חברי הכנסת."
+                                data-delete-url="{{ url_for('admin_delete_committee', item_id=c.commitieID) }}"
+                                title="מחק ועדה"><i class="fas fa-trash"></i> מחק</button>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>שם ועדה</label>
+                                    <input type="text" name="commitie_name" value="{{ c.commitie_name }}"
+                                        class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>ראש ועדה</label>
+                                    <select name="LeaderID" class="form-control" required>
+                                        {% for m in members %}
+                                        <option value="{{ m.knesetmemberID }}" {% if m.knesetmemberID==c.LeaderID
+                                            %}selected{% endif %}>{{ m.member_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>תיאור</label>
+                                <textarea name="description" class="form-control"
+                                    rows="3">{{ c.description or '' }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>חברי ועדה</label>
+                                {{ tag_selector('member_ids', members, c.member_ids, 'knesetmemberID', 'member_name',
+                                'edit-committee-'~c.commitieID~'-members') }}
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> עדכן</button>
+                                <button type="button" class="btn btn-outline"
+                                    onclick="toggleForm('edit-committee-{{ c.commitieID }}')">ביטול</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ════════════════════ LAWS TAB ════════════════════ -->
+<div class="admin-panel" id="panel-laws" style="display: none;">
+    <div class="admin-section-header">
+        <h3><i class="fas fa-scale-balanced"></i> חוקים ({{ laws|length }})</h3>
+        <button class="btn btn-primary" onclick="toggleForm('add-law-form')">
+            <i class="fas fa-plus"></i> הוסף חוק
+        </button>
+    </div>
+
+    <div class="admin-form-container" id="add-law-form" style="display: none;">
+        <form method="POST" action="{{ url_for('admin_add_law') }}" class="admin-form">
+            <h4>הוספת חוק חדש</h4>
+            <div class="form-group">
+                <label>שם חוק</label>
+                <input type="text" name="law_name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>תיאור</label>
+                <textarea name="description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>מציעי החוק</label>
+                {{ tag_selector('member_ids', members, [], 'knesetmemberID', 'member_name', 'add-law-members') }}
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> שמור</button>
+                <button type="button" class="btn btn-outline" onclick="toggleForm('add-law-form')">ביטול</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>שם חוק</th>
+                    <th>תיאור</th>
+                    <th>פעולות</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in laws %}
+                <tr>
+                    <td>{{ l.law_name }}</td>
+                    <td>{{ (l.description or '')[:60] }}{% if l.description and l.description|length > 60 %}...{% endif
+                        %}</td>
+                    <td>
+                        <button class="btn btn-outline btn-sm" onclick="toggleForm('edit-law-{{ l.lawID }}')">
+                            <i class="fas fa-edit"></i> ערוך
+                        </button>
+                    </td>
+                </tr>
+                <tr class="edit-row" id="edit-law-{{ l.lawID }}" style="display: none;">
+                    <td colspan="3">
+                        <form method="POST" action="{{ url_for('admin_edit_law', item_id=l.lawID) }}"
+                            class="admin-form inline-form" style="position: relative;">
+                            <button type="button" class="delete-trigger-btn"
+                                style="position: absolute; top: 1rem; left: 1rem; padding: 0.35rem 0.65rem; z-index: 10; border-radius: 6px; background: #dc3545; color: white; border: none; cursor: pointer; font-size: 0.875rem;"
+                                data-delete-msg="האם אתה בטוח שברצונך למחוק חוק זה? השיוכים אליו ימחקו גם כן."
+                                data-delete-url="{{ url_for('admin_delete_law', item_id=l.lawID) }}"
+                                title="מחק חוק"><i class="fas fa-trash"></i> מחק</button>
+                            <div class="form-group">
+                                <label>שם חוק</label>
+                                <input type="text" name="law_name" value="{{ l.law_name }}" class="form-control"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label>תיאור</label>
+                                <textarea name="description" class="form-control"
+                                    rows="3">{{ l.description or '' }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>מציעי החוק</label>
+                                {{ tag_selector('member_ids', members, l.member_ids, 'knesetmemberID', 'member_name',
+                                'edit-law-'~l.lawID~'-members') }}
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> עדכן</button>
+                                <button type="button" class="btn btn-outline"
+                                    onclick="toggleForm('edit-law-{{ l.lawID }}')">ביטול</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Custom Delete Modal -->
+<form id="deleteHiddenForm" method="POST" action="" style="display:none;"></form>
+
+<script>
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.delete-trigger-btn');
+        if (btn) {
+            var msg = btn.getAttribute('data-delete-msg');
+            var url = btn.getAttribute('data-delete-url');
+            if (confirm(msg)) {
+                var form = document.getElementById('deleteHiddenForm');
+                form.action = url;
+                form.submit();
+            }
+        }
+    });
+
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('panel-' + tabName).style.display = 'block';
+        document.getElementById('tab-' + tabName).classList.add('active');
+    }
+
+    function toggleForm(formId) {
+        const el = document.getElementById(formId);
+        el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+        // For non-table elements (add forms)
+        if (!el.classList.contains('edit-row')) {
+            el.style.display = el.style.display === 'table-row' ? 'block' : 'none';
+        }
+    }
+    function removeTag(iconElement, fieldName) {
+        const tag = iconElement.closest('.tag-item');
+        const id = tag.getAttribute('data-id');
+        const container = tag.closest('.tags-container');
+        const controls = container.nextElementSibling;
+        const select = controls.querySelector('select');
+        // show the option again
+        const option = select.querySelector(`option[value="${id}"]`);
+        if (option) option.style.display = '';
+        tag.remove();
+    }
+
+    function addTag(selectId, tagsContainerId, fieldName) {
+        const select = document.getElementById(selectId);
+        if (!select.value) return;
+
+        const tagsContainer = document.getElementById(tagsContainerId);
+        const id = select.value;
+        const name = select.options[select.selectedIndex].getAttribute('data-name');
+
+        // Check if already completely exists
+        if (tagsContainer.querySelector(`input[value="${id}"]`)) {
+            return; // already added somehow
+        }
+
+        const span = document.createElement('span');
+        span.className = 'tag-item';
+        span.style.cssText = 'display:inline-flex; align-items:center; gap:0.5rem; margin:0.2rem; padding:0.3rem 0.8rem; border-radius:15px; background-color:var(--primary-color); color:white; font-size:0.85rem; box-shadow:0 2px 4px rgba(0,0,0,0.1);';
+        span.setAttribute('data-id', id);
+        span.innerHTML = `${name} <i class="fas fa-times" style="cursor:pointer; opacity:0.8;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'" onclick="removeTag(this, '${fieldName}')"></i><input type="hidden" name="${fieldName}" value="${id}">`;
+
+        tagsContainer.appendChild(span);
+
+        // hide the option and reset select
+        select.options[select.selectedIndex].style.display = 'none';
+        select.value = '';
+    }
+</script>
+
+{% endblock %}

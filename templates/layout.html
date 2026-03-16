@@ -47,6 +47,20 @@
                         <span>חוקים</span>
                     </a>
                 </li>
+                {% if is_admin %}
+                <li class="nav-item" style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.5rem;">
+                    <a href="{{ url_for('admin_panel') }}" class="nav-link {% if request.endpoint == 'admin_panel' %}active{% endif %}" style="color: #f39c12;">
+                        <i class="fas fa-shield-halved"></i>
+                        <span>ניהול</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('logout') }}" class="nav-link" style="color: #e74c3c;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>התנתק</span>
+                    </a>
+                </li>
+                {% endif %}
             </ul>
         </aside>
 
@@ -54,7 +68,14 @@
         <main class="main-content">
             <header class="page-header fade-in">
                 <h2 class="page-title">{% block page_title %}{% endblock %}</h2>
-                {% block page_actions %}{% endblock %}
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    {% block page_actions %}{% endblock %}
+                    {% if not is_admin and request.endpoint == 'index' %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary" style="font-size: 0.9rem;">
+                        <i class="fas fa-lock" style="margin-left: 0.3rem;"></i> התחברות
+                    </a>
+                    {% endif %}
+                </div>
             </header>
 
             <div class="fade-in" style="animation-delay: 0.1s;">
