@@ -21,7 +21,7 @@ def handle_upload(file_obj, subfolder, old_url=""):
         folder_path = os.path.join(app.root_path, "static", "images", subfolder)
         os.makedirs(folder_path, exist_ok=True)
         file_obj.save(os.path.join(folder_path, filename))
-        return f"/static/images/{subfolder}/{filename}"
+        return filename
     return old_url
 
 # ── Per-request service setup ───────────────────────────────────────
@@ -226,7 +226,16 @@ def admin_edit_member(item_id):
 @app.route("/admin/member/delete/<int:item_id>", methods=["POST"])
 @login_required
 def admin_delete_member(item_id):
-    get_service().delete_member(item_id)
+    service = get_service()
+    # Fetch photo filename before deleting the member record
+    member = service.get_member_details(item_id)
+    photo_url = member["member"].get("photo_url", "") if member else ""
+    service.delete_member(item_id)
+    # Remove the photo file from disk
+    if photo_url:
+        photo_path = os.path.join(app.root_path, "static", "images", "mks", photo_url)
+        if os.path.isfile(photo_path):
+            os.remove(photo_path)
     flash("חבר הכנסת נמחק בהצלחה!", "success")
     return redirect(url_for("admin_panel"))
 
@@ -269,7 +278,16 @@ def admin_edit_party(item_id):
 @app.route("/admin/party/delete/<int:item_id>", methods=["POST"])
 @login_required
 def admin_delete_party(item_id):
-    get_service().delete_party(item_id)
+    service = get_service()
+    # Fetch logo filename before deleting the party record
+    party_data = service.get_party_details(item_id)
+    photo_url = party_data["party"].get("photo_url", "") if party_data else ""
+    service.delete_party(item_id)
+    # Remove the logo file from disk
+    if photo_url:
+        photo_path = os.path.join(app.root_path, "static", "images", "parties", photo_url)
+        if os.path.isfile(photo_path):
+            os.remove(photo_path)
     flash("המפלגה נמחקה בהצלחה!", "success")
     return redirect(url_for("admin_panel"))
 

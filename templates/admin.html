@@ -209,7 +209,7 @@
                                 <label>תמונה (ניתן להעלות חדשה)</label>
                                 <input type="file" name="photo" class="form-control" accept="image/*">
                                 {% if m.photo_url %}
-                                <div style="margin-top:0.5rem;"><small>תמונה נוכחית: <a href="{{ m.photo_url }}"
+                                <div style="margin-top:0.5rem;"><small>תמונה נוכחית: <a href="{{ url_for('static', filename='images/mks/' ~ m.photo_url) }}"
                                             target="_blank">צפייה</a></small></div>
                                 {% endif %}
                                 <input type="hidden" name="existing_photo_url" value="{{ m.photo_url or '' }}">
@@ -313,7 +313,7 @@
                                     <label>לוגו מפלגה (ניתן להעלות חדש)</label>
                                     <input type="file" name="photo" class="form-control" accept="image/*">
                                     {% if p.photo_url %}
-                                    <div style="margin-top:0.5rem;"><small>לוגו נוכחי: <a href="{{ p.photo_url }}"
+                                    <div style="margin-top:0.5rem;"><small>לוגו נוכחי: <a href="{{ url_for('static', filename='images/parties/' ~ p.photo_url) }}"
                                                 target="_blank">צפייה</a></small></div>
                                     {% endif %}
                                     <input type="hidden" name="existing_photo_url" value="{{ p.photo_url or '' }}">
