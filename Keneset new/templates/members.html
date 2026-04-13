@@ -1,0 +1,288 @@
+{% extends 'layout.html' %}
+
+{% block title %}חברי כנסת | מאגר הכנסת{% endblock %}
+
+{% block page_title %}חברי הכנסת{% endblock %}
+
+{% block page_actions %}
+<div class="badge">
+    <i class="fas fa-users" style="margin-left: 0.5rem;"></i> {{ members|length }} חברי כנסת רשומים
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="filter-controls fade-in">
+    <div class="filter-input-wrapper">
+        <i class="fas fa-search filter-search-icon"></i>
+        <input type="text" id="searchInput" placeholder="חיפוש חבר כנסת (שם מלא או חלקי)..." class="filter-input">
+    </div>
+
+    <div class="filter-select-wrapper">
+        <label for="sortField" class="filter-label">מיון לפי:</label>
+        <select id="sortField" class="filter-select">
+            <option value="firstName">שם פרטי</option>
+            <option value="lastName">שם משפחה</option>
+            <option value="party">מפלגה</option>
+        </select>
+    </div>
+
+    <div class="filter-select-wrapper">
+        <label for="sortOrder" class="filter-label">סדר:</label>
+        <select id="sortOrder" class="filter-select">
+            <option value="asc">א-ת (עולה)</option>
+            <option value="desc">ת-א (יורד)</option>
+        </select>
+    </div>
+</div>
+
+<div class="data-grid fade-in" style="animation-delay: 0.2s;" id="membersGrid">
+    {% for member in members %}
+    <div class="card" data-party="{{ member.party_name if member.party_name else '' }}">
+        <div class="card-header" style="text-align: center; padding: 0;">
+            {% if member.photo_url %}
+            <div style="width: 100%; overflow: hidden; position: relative;">
+                <img src="{{ url_for('static', filename='images/mks/' ~ member.photo_url) }}"
+                    alt="{{ member.member_name }}" class="profile-img profile-img-large">
+            </div>
+            {% else %}
+            <div class="profile-img-large"
+                style="background-color: var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 5rem; color: white;">
+                <i class="fas fa-user"></i>
+            </div>
+            {% endif %}
+            <div style="padding: 1.5rem;">
+                <h3 class="card-title">{{ member.member_name }}</h3>
+                {% if member.party_logo and member.partyID %}
+                <a href="{{ url_for('party_details', party_id=member.partyID) }}" title="{{ member.party_name }}"
+                    style="display: inline-block; margin-top: 0.5rem; transition: transform 0.2s, opacity 0.2s;"
+                    onmouseover="this.style.transform='scale(1.15)'; this.style.opacity='0.85'"
+                    onmouseout="this.style.transform='scale(1)'; this.style.opacity='1'">
+                    <img src="{{ url_for('static', filename='images/parties/' ~ member.party_logo) }}"
+                        alt="{{ member.party_name }}"
+                        style="max-height: 48px; max-width: 160px; width: auto; height: auto; object-fit: contain;">
+                </a>
+                {% elif member.party_name and member.partyID %}
+                <a href="{{ url_for('party_details', party_id=member.partyID) }}" class="badge"
+                    style="margin-top: 0.5rem; text-decoration: none; color: white; transition: opacity 0.3s;"
+                    onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">{{ member.party_name
+                    }}</a>
+                {% else %}
+                <span class="badge" style="background-color: #f1c40f; color: #d35400;">סיעה לא ידועה</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="card-detail">
+                <i class="fas fa-birthday-cake"></i>
+                <span><strong>גיל:</strong> {{ member.age if member.age else 'לא צוין' }}</span>
+            </div>
+            <div class="card-detail">
+                <i class="fas fa-briefcase"></i>
+                <span><strong>תפקיד/מקצוע:</strong> {{ member.job if member.job else 'לא צוין' }}</span>
+            </div>
+        </div>
+        <div class="card-footer" style="justify-content: center;">
+            <a href="{{ url_for('member_details', member_id=member.knesetmemberID) }}" class="btn btn-outline"
+                style="width: 100%; justify-content: center; text-decoration: none;">
+                פרופיל מלא <i class="fas fa-chevron-left" style="margin-right: 0.5rem; margin-left: 0;"></i>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not members %}
+<div class="card" style="text-align: center; padding: 3rem;">
+    <i class="fas fa-exclamation-circle"
+        style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 1rem;"></i>
+    <h3>לא נמצאו חברי כנסת</h3>
+    <p>קיימת בעיה בטעינת הנתונים ממסד הנתונים.</p>
+</div>
+{% endif %}
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  Deot / Opinions Section (from Deot Web Service)             -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div style="margin-top: 3rem;" id="deot-section">
+    <h3 style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+        <i class="fas fa-comments" style="margin-left: 0.5rem;"></i>
+        דעות הציבור על הכנסת
+        {% if deot %}<span class="badge" style="background-color: var(--primary-color); color: white; font-size: 0.8rem; margin-right: 0.5rem;">{{ deot|length }}</span>{% endif %}
+    </h3>
+
+    <!-- Add Opinion Form -->
+    <div class="card fade-in" style="margin-bottom: 2rem; border-right: 3px solid var(--primary-color);">
+        <div class="card-header">
+            <h4 class="card-title" style="font-size: 1.1rem;">
+                <i class="fas fa-pen" style="margin-left: 0.5rem; color: var(--primary-color);"></i>
+                הוסף דעה
+            </h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('add_dea') }}" id="dea-form">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label for="dea_name" style="display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--text-secondary); font-size: 0.9rem;">
+                            <i class="fas fa-user" style="margin-left: 0.3rem;"></i> שם הכותב
+                        </label>
+                        <input type="text" id="dea_name" name="name" required
+                            placeholder="הכנס את שמך..."
+                            style="width: 100%; padding: 0.7rem 1rem; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; background: var(--bg-secondary); color: var(--text-primary); transition: border-color 0.3s;"
+                            onfocus="this.style.borderColor='var(--primary-color)'"
+                            onblur="this.style.borderColor='var(--border-color)'">
+                    </div>
+                    <div>
+                        <label for="dea_title" style="display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--text-secondary); font-size: 0.9rem;">
+                            <i class="fas fa-heading" style="margin-left: 0.3rem;"></i> כותרת
+                        </label>
+                        <input type="text" id="dea_title" name="title" required
+                            placeholder="כותרת הדעה..."
+                            style="width: 100%; padding: 0.7rem 1rem; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; background: var(--bg-secondary); color: var(--text-primary); transition: border-color 0.3s;"
+                            onfocus="this.style.borderColor='var(--primary-color)'"
+                            onblur="this.style.borderColor='var(--border-color)'">
+                    </div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label for="dea_content" style="display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--text-secondary); font-size: 0.9rem;">
+                        <i class="fas fa-comment-alt" style="margin-left: 0.3rem;"></i> תוכן הדעה
+                    </label>
+                    <textarea id="dea_content" name="content" required rows="3"
+                        placeholder="כתוב את דעתך על חברי הכנסת..."
+                        style="width: 100%; padding: 0.7rem 1rem; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; resize: vertical; background: var(--bg-secondary); color: var(--text-primary); font-family: inherit; transition: border-color 0.3s;"
+                        onfocus="this.style.borderColor='var(--primary-color)'"
+                        onblur="this.style.borderColor='var(--border-color)'"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary"
+                    style="padding: 0.6rem 2rem; border-radius: 8px; font-size: 0.95rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;"
+                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    <i class="fas fa-paper-plane" style="margin-left: 0.5rem;"></i> שלח דעה
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Opinions List -->
+    {% if deot %}
+    <div class="data-grid fade-in" style="grid-template-columns: 1fr;">
+        {% for dea in deot %}
+        <div class="card" style="border-right: 3px solid var(--accent-color); transition: transform 0.2s;"
+            onmouseover="this.style.transform='translateX(-4px)'"
+            onmouseout="this.style.transform='translateX(0)'">
+            <div class="card-body" style="padding: 1.2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.7rem;">
+                    <div>
+                        <h4 style="margin: 0 0 0.3rem 0; color: var(--text-primary); font-size: 1.05rem;">
+                            <i class="fas fa-quote-right" style="color: var(--accent-color); margin-left: 0.4rem; font-size: 0.85rem;"></i>
+                            {{ dea.title }}
+                        </h4>
+                        <div style="display: flex; gap: 1rem; color: var(--text-secondary); font-size: 0.85rem;">
+                            <span>
+                                <i class="fas fa-user-circle" style="margin-left: 0.3rem;"></i>
+                                {{ dea.name }}
+                            </span>
+                            <span>
+                                <i class="fas fa-clock" style="margin-left: 0.3rem;"></i>
+                                {{ dea.dateOfDea }}
+                            </span>
+                        </div>
+                    </div>
+                    {% if is_admin %}
+                    <form method="POST" action="{{ url_for('delete_dea', dea_id=dea.DeaId) }}"
+                        style="margin: 0;" onsubmit="return confirm('האם למחוק דעה זו?')">
+                        <button type="submit" title="מחק דעה"
+                            style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1rem; padding: 0.3rem; transition: color 0.3s;"
+                            onmouseover="this.style.color='#e74c3c'"
+                            onmouseout="this.style.color='var(--text-secondary)'">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                <p style="margin: 0; color: var(--text-primary); line-height: 1.6;">{{ dea.content }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 2rem;">
+        <i class="fas fa-comment-slash" style="font-size: 2rem; color: var(--text-secondary); margin-bottom: 0.5rem; display: block;"></i>
+        <p style="color: var(--text-secondary); margin: 0;">עדיין אין דעות. היה הראשון לשתף את דעתך!</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const sortField = document.getElementById('sortField');
+        const sortOrder = document.getElementById('sortOrder');
+        const container = document.getElementById('membersGrid');
+
+        if (!container) return;
+
+        const items = Array.from(container.querySelectorAll('.card'));
+
+        function updateView() {
+            const query = searchInput.value.toLowerCase().trim();
+            const field = sortField.value;
+            const order = sortOrder.value === 'asc' ? 1 : -1;
+
+            let visibleItems = items.filter(item => {
+                const nameEl = item.querySelector('.card-title');
+                const name = nameEl ? nameEl.textContent.trim().toLowerCase() : '';
+                const isMatch = name.includes(query);
+                item.style.display = isMatch ? '' : 'none';
+                return isMatch;
+            });
+
+            visibleItems.sort((a, b) => {
+                let valA = '', valB = '';
+
+                if (field === 'party') {
+                    valA = a.getAttribute('data-party') || 'תתת';
+                    valB = b.getAttribute('data-party') || 'תתת';
+                } else {
+                    const nameElA = a.querySelector('.card-title');
+                    const nameElB = b.querySelector('.card-title');
+                    const nameA = nameElA ? nameElA.textContent.trim() : '';
+                    const nameB = nameElB ? nameElB.textContent.trim() : '';
+
+                    const partsA = nameA.split(' ').filter(Boolean);
+                    const partsB = nameB.split(' ').filter(Boolean);
+
+                    if (field === 'lastName') {
+                        valA = partsA.length > 1 ? partsA.slice(1).join(' ') : partsA[0];
+                        valB = partsB.length > 1 ? partsB.slice(1).join(' ') : partsB[0];
+                    } else {
+                        valA = partsA[0] || '';
+                        valB = partsB[0] || '';
+                    }
+                }
+
+                let cmp = valA.localeCompare(valB, 'he') * order;
+                if (cmp === 0 && field === 'party') {
+                    const nameElA = a.querySelector('.card-title');
+                    const nameElB = b.querySelector('.card-title');
+                    const nameA = nameElA ? nameElA.textContent.trim() : '';
+                    const nameB = nameElB ? nameElB.textContent.trim() : '';
+                    cmp = nameA.localeCompare(nameB, 'he') * order;
+                }
+
+                return cmp;
+            });
+
+            // Use DocumentFragment for better performance
+            const fragment = document.createDocumentFragment();
+            visibleItems.forEach(item => fragment.appendChild(item));
+            container.appendChild(fragment);
+        }
+
+        searchInput.addEventListener('input', updateView);
+        sortField.addEventListener('change', updateView);
+        sortOrder.addEventListener('change', updateView);
+
+        updateView(); // Initial sort
+    });
+</script>
+{% endblock %}

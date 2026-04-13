@@ -1,0 +1,121 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ member.member_name }} | מאגר הכנסת{% endblock %}
+
+{% block page_title %}
+<a href="javascript:history.back()"
+    style="color: var(--text-secondary); text-decoration: none; font-size: 1.5rem; margin-left: 1rem;">
+    <i class="fas fa-arrow-right"></i>
+</a>
+{{ member.member_name }}
+{% endblock %}
+
+{% block page_actions %}
+<div style="display: flex; gap: 1rem; align-items: center;">
+    {% if member.party_logo and member.partyID %}
+    <a href="{{ url_for('party_details', party_id=member.partyID) }}" title="{{ member.party_name }}"
+        style="display: inline-flex; align-items: center; transition: transform 0.2s, opacity 0.2s;"
+        onmouseover="this.style.transform='scale(1.15)'; this.style.opacity='0.85'"
+        onmouseout="this.style.transform='scale(1)'; this.style.opacity='1'">
+        <img src="{{ url_for('static', filename='images/parties/' ~ member.party_logo) }}" alt="{{ member.party_name }}"
+            style="height: 40px; width: auto; object-fit: contain;">
+    </a>
+    {% elif member.party_name and member.partyID %}
+    <a href="{{ url_for('party_details', party_id=member.partyID) }}" class="badge"
+        style="background-color: rgba(52, 152, 219, 0.1); color: var(--accent-color); text-decoration: none; transition: opacity 0.3s;"
+        onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+        <i class="fas fa-users" style="margin-left: 0.5rem;"></i> {{ member.party_name }}
+    </a>
+    {% else %}
+    <span class="badge" style="background-color: #f1c40f; color: #d35400;">
+        <i class="fas fa-users" style="margin-left: 0.5rem;"></i> סיעה לא ידועה
+    </span>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card fade-in" style="margin-bottom: 2rem;">
+    <div class="card-header" style="display: flex; align-items: center; gap: 1rem;">
+        {% if member.photo_url %}
+        <div style="position: relative; display: inline-block;">
+            <img src="{{ url_for('static', filename='images/mks/' ~ member.photo_url) }}" alt="{{ member.member_name }}"
+                class="profile-img profile-img-hero">
+        </div>
+        {% else %}
+        <div class="profile-img-hero"
+            style="background-color: var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 4rem; color: white;">
+            <i class="fas fa-user"></i>
+        </div>
+        {% endif %}
+        <div>
+            <h3 class="card-title" style="margin-bottom: 0.5rem;">פרטים אישיים</h3>
+            <div style="display: flex; gap: 1rem; color: var(--text-secondary); flex-wrap: wrap;">
+                <span><i class="fas fa-birthday-cake" style="margin-left: 0.3rem;"></i> גיל: {{ member.age if member.age
+                    else 'לא צוין' }}</span>
+                <span><i class="fas fa-briefcase" style="margin-left: 0.3rem;"></i> תפקיד/מקצוע: {{ member.job if
+                    member.job else 'לא צוין' }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+    <!-- Laws Section -->
+    <div>
+        <h3 style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+            <i class="fas fa-balance-scale" style="margin-left: 0.5rem;"></i> חוקים שיזם/ה
+        </h3>
+        {% if laws %}
+        <div class="data-grid fade-in" style="grid-template-columns: 1fr;">
+            {% for law in laws %}
+            <div class="card" style="border-right: 3px solid var(--accent-color);">
+                <div class="card-body" style="padding: 1rem;">
+                    <a href="{{ url_for('law_details', law_id=law.lawID) }}"
+                        style="color: var(--text-primary); text-decoration: none; font-weight: 600; display: block; transition: color 0.3s;"
+                        onmouseover="this.style.color='var(--accent-color)'"
+                        onmouseout="this.style.color='var(--text-primary)'">
+                        <i class="fas fa-file-signature" style="color: var(--primary-color); margin-left: 0.5rem;"></i>
+                        {{ law.law_name }}
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card" style="text-align: center; padding: 2rem;">
+            <p style="color: var(--text-secondary); margin: 0;">לא נמצאו חוקים במסד הנתונים</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Committees Section -->
+    <div>
+        <h3 style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+            <i class="fas fa-users-cog" style="margin-left: 0.5rem;"></i> חברות בוועדות
+        </h3>
+        {% if committees %}
+        <div class="data-grid fade-in" style="grid-template-columns: 1fr;">
+            {% for comm in committees %}
+            <div class="card" style="border-right: 3px solid var(--primary-color);">
+                <div class="card-body" style="padding: 1rem;">
+                    <a href="{{ url_for('committee_details', committee_id=comm.commitieID) }}"
+                        style="color: var(--text-primary); text-decoration: none; font-weight: 600; display: block; transition: color 0.3s;"
+                        onmouseover="this.style.color='var(--primary-color)'"
+                        onmouseout="this.style.color='var(--text-primary)'">
+                        <i class="fas fa-users" style="color: var(--accent-color); margin-left: 0.5rem;"></i> {{
+                        comm.commitie_name }}
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card" style="text-align: center; padding: 2rem;">
+            <p style="color: var(--text-secondary); margin: 0;">לא נמצאה חברות בוועדות</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
