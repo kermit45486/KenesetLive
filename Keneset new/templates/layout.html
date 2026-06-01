@@ -78,6 +78,25 @@
                 </div>
             </header>
 
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages fade-in" style="margin-bottom: 1.5rem;">
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {% if category == 'success' %}
+                            <i class="fas fa-check-circle"></i>
+                            {% elif category == 'error' %}
+                            <i class="fas fa-exclamation-triangle"></i>
+                            {% else %}
+                            <i class="fas fa-info-circle"></i>
+                            {% endif %}
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
             <div class="fade-in" style="animation-delay: 0.1s;">
                 {% block content %}{% endblock %}
             </div>
