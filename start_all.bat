@@ -25,7 +25,7 @@ if errorlevel 1 (
 
 echo.
 echo ── Starting Deot Web Service (port 5000) ──
-start "Deot Web Service" cmd /c "cd /d "%~dp0web services" && python app.py"
+start "Deot Web Service" cmd /k "cd /d "%~dp0web services" && "%~dp0Keneset new\venv\Scripts\python.exe" app.py"
 echo [OK] Web Service starting on http://localhost:5000
 
 :: Wait a moment for the Web Service to start
@@ -33,7 +33,7 @@ timeout /t 2 /nobreak >nul
 
 echo.
 echo ── Starting Main Website (port 3000) ──
-start "Knesset Website" cmd /c "cd /d "%~dp0Keneset new" && python app.py"
+start "Knesset Website" cmd /k "cd /d "%~dp0Keneset new" && "%~dp0Keneset new\venv\Scripts\python.exe" app.py"
 echo [OK] Website starting on http://localhost:3000
 
 echo.

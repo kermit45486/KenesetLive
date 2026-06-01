@@ -82,15 +82,7 @@ def index():
 def members():
     service = get_service()
     all_members = service.get_all_members()
-    # Fetch opinions from the Deot Web Service
-    deot = []
-    try:
-        resp = http_requests.get(DEOT_API_URL, timeout=3)
-        if resp.status_code == 200:
-            deot = resp.json()
-    except http_requests.exceptions.ConnectionError:
-        pass  # Web Service is not running — show page without opinions
-    return render_template("members.html", members=all_members, deot=deot)
+    return render_template("members.html", members=all_members)
 
 
 @app.route("/member/<int:member_id>")
@@ -99,11 +91,21 @@ def member_details(member_id):
     data = service.get_member_details(member_id)
     if data is None:
         return "Member not found", 404
+    # Fetch opinions for this specific member from the Deot Web Service
+    member_name = data["member"]["member_name"]
+    deot = []
+    try:
+        resp = http_requests.get(DEOT_API_URL, params={"member_name": member_name}, timeout=3)
+        if resp.status_code == 200:
+            deot = resp.json()
+    except http_requests.exceptions.ConnectionError:
+        pass  # Web Service is not running — show page without opinions
     return render_template(
         "member_details.html",
         member=data["member"],
         laws=data["laws"],
         committees=data["committees"],
+        deot=deot,
     )
 
 
@@ -168,10 +170,12 @@ def law_details(law_id):
 @app.route("/deot/add", methods=["POST"])
 def add_dea():
     """Submit a new opinion to the Deot Web Service."""
+    member_id = request.form.get("member_id", "")
     payload = {
         "name": request.form["name"],
         "title": request.form["title"],
         "content": request.form["content"],
+        "member_name": request.form.get("member_name", ""),
     }
     try:
         resp = http_requests.post(DEOT_API_URL, json=payload, timeout=3)
@@ -181,19 +185,24 @@ def add_dea():
             flash("שגיאה בהוספת הדעה", "error")
     except http_requests.exceptions.ConnectionError:
         flash("שירות הדעות אינו זמין כרגע", "error")
-    return redirect(url_for("members") + "#deot-section")
+    if member_id:
+        return redirect(url_for("member_details", member_id=int(member_id)) + "#deot-section")
+    return redirect(url_for("members"))
 
 
 @app.route("/deot/delete/<int:dea_id>", methods=["POST"])
 @login_required
 def delete_dea(dea_id):
     """Delete an opinion via the Web Service (admin only)."""
+    member_id = request.form.get("member_id", "")
     try:
         http_requests.delete(f"{DEOT_API_URL}/{dea_id}", timeout=3)
         flash("הדעה נמחקה בהצלחה!", "success")
     except http_requests.exceptions.ConnectionError:
         flash("שירות הדעות אינו זמין כרגע", "error")
-    return redirect(url_for("members") + "#deot-section")
+    if member_id:
+        return redirect(url_for("member_details", member_id=int(member_id)) + "#deot-section")
+    return redirect(url_for("members"))
 
 
 # ── Login / Logout ──────────────────────────────────────────────────

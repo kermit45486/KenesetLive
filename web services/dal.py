@@ -5,11 +5,12 @@ Handles all database connections and queries for the Deot database.
 Uses MS Access (Deot.mdb) with the following table:
 
 Table: Deot
-  - DeaId     (COUNTER)  — Auto-increment primary key
-  - dateOfDea (DATETIME) — Date the opinion was published
-  - name      (VARCHAR)  — Author name
-  - title     (VARCHAR)  — Opinion title
-  - content   (LONGCHAR) — Opinion content
+  - DeaId       (COUNTER)  — Auto-increment primary key
+  - dateOfDea   (DATETIME) — Date the opinion was published
+  - name        (VARCHAR)  — Author name
+  - title       (VARCHAR)  — Opinion title
+  - content     (LONGCHAR) — Opinion content
+  - member_name (VARCHAR)  — Knesset member this opinion is about
 """
 import pyodbc  # type: ignore
 import os
@@ -76,6 +77,13 @@ class DeotDatabase:
             "SELECT * FROM Deot ORDER BY dateOfDea DESC"
         )  # type: ignore
 
+    def get_deot_by_member_name(self, member_name: str) -> list[dict]:
+        """Return all opinions for a specific Knesset member, newest first."""
+        return self._execute(
+            "SELECT * FROM Deot WHERE member_name = ? ORDER BY dateOfDea DESC",
+            (member_name,),
+        )  # type: ignore
+
     def get_dea_by_id(self, dea_id: int) -> dict | None:
         """Return a single opinion by its ID."""
         return self._execute(
@@ -91,12 +99,12 @@ class DeotDatabase:
 
     # ── Write operations ────────────────────────────────────────────
 
-    def add_dea(self, name: str, title: str, content: str, dateOfDea: str) -> int:
+    def add_dea(self, name: str, title: str, content: str, dateOfDea: str, member_name: str = "") -> int:
         """Insert a new opinion and return its ID."""
         return self._execute_write(
-            "INSERT INTO Deot (name, title, content, dateOfDea) "
-            "VALUES (?, ?, ?, ?)",
-            (name, title, content, dateOfDea),
+            "INSERT INTO Deot (name, title, content, dateOfDea, member_name) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (name, title, content, dateOfDea, member_name),
             return_identity=True,
         )  # type: ignore
 

@@ -44,9 +44,14 @@ def close_db(e=None):
 
 @app.route("/api/deot")
 def get_deot():
-    """Return all opinions, newest first."""
+    """Return all opinions, newest first.
+    Optional query param: ?member_name=... to filter by Knesset member."""
     db = get_db()
-    deot = db.get_all_deot()
+    member_name = request.args.get("member_name")
+    if member_name:
+        deot = db.get_deot_by_member_name(member_name)
+    else:
+        deot = db.get_all_deot()
     # Format dates for JSON serialization
     for d in deot:
         if d.get("dateOfDea") and hasattr(d["dateOfDea"], "strftime"):
@@ -95,6 +100,7 @@ def add_dea():
         title=data["title"],
         content=data["content"],
         dateOfDea=data.get("dateOfDea", datetime.now().strftime("%Y-%m-%d %H:%M")),
+        member_name=data.get("member_name", ""),
     )
     return jsonify({"success": True, "DeaId": dea_id}), 201
 
